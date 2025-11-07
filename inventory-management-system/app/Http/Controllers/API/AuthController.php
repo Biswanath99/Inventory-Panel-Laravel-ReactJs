@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password as RulesPassword;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
 
 class AuthController extends Controller
@@ -130,7 +132,7 @@ class AuthController extends Controller
             $credentials = $validator->validated();
             $user        = User::where('email', $credentials['email'])->first();
 
-            if (!$user || !Hash::check($credentials['password'], $user->password)){
+            if (!$user || !Hash::check($credentials['password'],$user->password)){
                 return response()->json([
                     'status'  => false,
                     'message' => 'Invalid credentials!'

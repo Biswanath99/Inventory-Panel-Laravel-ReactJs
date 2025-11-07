@@ -6,6 +6,7 @@ const CreateProduct = ({ product = {} }) => {
   const [productForm, setProductForm] = useState({
     name: product.name || "",
     quantity: product.quantity || "",
+    user_id : localStorage.getItem('user_id') || "",
     status: product.status || "Active",
     variants: product.variants || [{ variant_name: "", price: "" }],
   });

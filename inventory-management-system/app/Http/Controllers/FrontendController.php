@@ -7,6 +7,16 @@ use Inertia\Inertia;
 
 class FrontendController extends Controller
 {
+    public function register()
+    {
+        return Inertia::render('Auth/Register');
+    }
+    
+    public function login()
+    {
+        return Inertia::render('Auth/Login');
+    }
+
     public function index()
     {
         return Inertia::render('Dashboard');

@@ -1,37 +1,41 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import Api from "../../API/Api"; // Your Axios instance
 import { Link } from "@inertiajs/react";
 
 const ProductsList = () => {
-  // Sample static product data
-  const products = [
-    {
-      id: 1,
-      productId: "PRD-001",
-      name: "Wireless Mouse",
-      category: "Electronics",
-      price: "$25",
-      stock: 120,
-      status: "Active",
-    },
-    {
-      id: 2,
-      productId: "PRD-002",
-      name: "Bluetooth Speaker",
-      category: "Audio",
-      price: "$55",
-      stock: 45,
-      status: "Inactive",
-    },
-    {
-      id: 3,
-      productId: "PRD-003",
-      name: "Smartwatch",
-      category: "Wearables",
-      price: "$99",
-      stock: 80,
-      status: "Active",
-    },
-  ];
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch products from API
+  const fetchProducts = async () => {
+    try {
+      const res = await Api.get("/products");
+      if (res.data.products) {
+        setProducts(res.data.products);
+      }
+    } catch (err) {
+      console.error("Error fetching products:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  const deleteProduct = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this product?")) return;
+
+    try {
+      await Api.delete(`/products/${id}`); // API delete endpoint
+      setProducts(products.filter((p) => p.id !== id)); // remove from UI
+      alert("Product deleted successfully!");
+    } catch (err) {
+      console.error("Delete failed:", err);
+      alert("Failed to delete product.");
+    }
+  };
 
   return (
     <div className="container-fluid">
@@ -53,69 +57,79 @@ const ProductsList = () => {
           <p className="text-primary m-0 fw-bold">Product Info</p>
         </div>
         <div className="card-body">
-          <div className="table-responsive text-nowrap table mt-3">
-            <table className="table table-hover table-sm my-0" id="dataTable">
-              <thead>
-                <tr>
-                  <th>Sl No.</th>
-                  <th>Product ID</th>
-                  <th>Product Name</th>
-                  <th>Category</th>
-                  <th>Price</th>
-                  <th>Stock</th>
-                  <th className="text-center">Status</th>
-                  <th className="text-center">Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {products.length > 0 ? (
-                  products.map((product, index) => (
-                    <tr key={index}>
-                      <td>{index + 1}</td>
-                      <td>{product.productId}</td>
-                      <td>{product.name}</td>
-                      <td>{product.category}</td>
-                      <td>{product.price}</td>
-                      <td>{product.stock}</td>
-                      <td className="text-center">
-                        {product.status === "Active" ? (
-                          <span className="badge rounded-pill bg-success">Active</span>
-                        ) : (
-                          <span className="badge rounded-pill bg-danger">Inactive</span>
-                        )}
-                      </td>
-                      <td className="text-center">
-                        <div className="dropdown">
-                          <button
-                            className="btn btn-primary btn-sm dropdown-toggle"
-                            data-bs-toggle="dropdown"
-                            type="button"
-                          >
-                            <i className="fas fa-cog"></i>
-                          </button>
-                          <div className="dropdown-menu">
-                            <Link className="dropdown-item" href={`/edit-product/${product.id}`}>
-                              <i className="fas fa-pen"></i>&nbsp;Edit Product
-                            </Link>
-                            <button className="dropdown-item text-danger">
-                              <i className="fas fa-trash"></i>&nbsp;Delete Product
+          {loading ? (
+            <p>Loading products...</p>
+          ) : (
+            <div className="table-responsive text-nowrap table mt-3">
+              <table className="table table-hover table-sm my-0">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Name</th>
+                    <th>Quantity</th>
+                    <th className="text-center">Stock Status</th>
+                     <th className="text-center">Status</th>
+                    <th className="text-center">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {products.length > 0 ? (
+                    products.map((product, index) => (
+                      <tr key={product.id}>
+                        <td>{index + 1}</td>
+                        <td>{product.name}</td>
+                        <td>{product.quantity}</td>
+                        <td className="text-center">
+                          {product.quantity > 0 ? (
+                            <span className="badge rounded-pill bg-primary">In Stock</span>
+                          ) : (
+                            <span className="badge rounded-pill bg-warning">Out of Stock</span>
+                          )}
+                        </td>
+
+                        <td className="text-center">
+                          {product.status == 'Active'? (
+                            <span className="badge rounded-pill bg-success">Active</span>
+                          ) : (
+                            <span className="badge rounded-pill bg-danger">Inactive</span>
+                          )}
+                        </td>
+
+                        <td className="text-center">
+                          <div className="dropdown">
+                            <button
+                              className="btn btn-primary btn-sm dropdown-toggle"
+                              data-bs-toggle="dropdown"
+                              type="button"
+                            >
+                              <i className="fas fa-cog"></i>
                             </button>
-                         
+                            <div className="dropdown-menu">
+                              <Link className="dropdown-item" href={`/edit-product/${product.id}`}>
+                                <i className="fas fa-pen"></i>&nbsp;Edit
+                              </Link>
+                              <button
+                                className="dropdown-item text-danger"
+                                onClick={() => deleteProduct(product.id)}
+                              >
+                                <i className="fas fa-trash"></i>&nbsp;Delete
+                              </button>
+                            </div>
                           </div>
-                        </div>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="5" className="text-center">
+                        No products found.
                       </td>
                     </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="8" className="text-center">
-                      No products found.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       </div>
     </div>

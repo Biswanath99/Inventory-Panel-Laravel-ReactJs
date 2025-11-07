@@ -21,30 +21,14 @@ class ProductController extends Controller
 
             $perPage  = $request->perPage ?? 20;
             $user     = Auth::user();
-            $products = $user->products()->with('variants')->paginate($perPage);
+            $products = Product::with('variants')->get();
 
-            $products->getCollection()->transform(function ($product) {
-                return [
-                    'id'           => $product->id,
-                    'name'         => $product->name,
-                    'stock_status' => $product->stock_status,
-                    'status'       => $product->status,
-                    'variants'     => $product->variants->map(fn($v) => [
-                        'id'           => $v->id,
-                        'variant_name' => $v->variant_name,
-                        'price'        => $v->price,
-                    ]),
-                ];
-            });
+            
 
             return response()->json([
                 'success'      => true,
                 'message'      => 'Products retrieved successfully',
-                'current_page' => $products->currentPage(),
-                'last_page'    => $products->lastPage(),
-                'per_page'     => $products->perPage(),
-                'total'        => $products->total(),
-                'products'     => $products->items()
+                'products'     => $products
             ], 200);
 
         } catch (Exception $e) {
@@ -90,7 +74,6 @@ class ProductController extends Controller
 
     public function createProduct(Request $request)
     {   
-       // dd($request->all());
        
          $validation    = $this->validationRuleForProduct($request);
          $validatedData = $request->validate($validation['rules'], $validation['messages']);
@@ -98,15 +81,13 @@ class ProductController extends Controller
         try {
 
             DB::beginTransaction();
-
-           
-
+            
             $product =  Product::create([
                             'name'     => $validatedData['name']     ?? null,
                             'quantity' => $validatedData['quantity'] ?? 1,
                             'status'   => $validatedData['status']   ?? 'Active',
-                            
-                        ]);
+                            'user_id'  => 1
+                        ]); 
 
                         foreach ($request->variants as $variantData){
                             $product->variants()->create([

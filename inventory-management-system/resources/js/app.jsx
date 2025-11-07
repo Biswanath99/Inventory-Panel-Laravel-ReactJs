@@ -1,15 +1,13 @@
 import "./bootstrap";
 import React from "react";
 import { createRoot } from "react-dom/client";
-import { createInertiaApp } from "@inertiajs/react"; // ✅ use this package, not @inertiajs/inertia-react
+import { createInertiaApp } from "@inertiajs/react";
 import Layout from "./Layouts/Layout.jsx";
-
 createInertiaApp({
   title: (title) => `${title} - Inventory Panel`,
 
   resolve: async (name) => {
     const pages = import.meta.glob("./Pages/**/*.jsx");
-
     const importPage = pages[`./Pages/${name}.jsx`];
 
     if (!importPage) {
@@ -19,8 +17,14 @@ createInertiaApp({
 
     const page = await importPage();
 
-    // ✅ Add layout only if it doesn’t exist
-    page.default.layout = page.default.layout || ((pageContent) => <Layout>{pageContent}</Layout>);
+    // ✅ Conditionally add layout
+    // Exclude Auth pages (Login, Register)
+    const authPages = ["Auth/Login", "Auth/Register"];
+    if (!authPages.includes(name)) {
+      page.default.layout = page.default.layout || ((pageContent) => <Layout>{pageContent}</Layout>);
+    } else {
+      page.default.layout = page.default.layout || ((pageContent) => <>{pageContent}</>);
+    }
 
     return page;
   },
